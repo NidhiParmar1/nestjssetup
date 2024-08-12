@@ -1,40 +1,56 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from 'src/database/entities/user.entity';
+import { Repository } from 'typeorm/repository/Repository';
+import { InjectRepository } from "@nestjs/typeorm";
 
 @Injectable()
 export class UserService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
+  ) {}
   private users: User[] = [];
   private idCounter = 1;
 
-  create(user: Omit<User, 'id'>): User {
-    const newUser = { id: this.idCounter++, ...user };
-    this.users.push(newUser);
-    return newUser;
+  async create(user: Omit<User, 'id'>): Promise<User> {
+    const newUser = { ...user };
+    // this.userRepository.find();
+    const userResponse = await this.userRepository.save(newUser);
+    return userResponse;
   }
 
-  findAll(): User[] {
-    return this.users;
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find();
   }
 
-  findOne(id: number): User {
-    const user = this.users.find(user => user.id === id);
+  async findOne(id: number): Promise<User> | undefined {
+    const user = await this.userRepository.findOne({where: {id}});
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
 
-  update(id: number, updatedUser: Omit<User, 'id'>): User {
-    const user = this.findOne(id);
-    Object.assign(user, updatedUser);
+  async update(id: number, body): Promise<User> {
+    let user = await this.userRepository.findOne({where: {id}});
+    if (body.name) {
+      user.name = body.name;
+    }
+    // Save updated user profile to the database
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+		user = await this.userRepository.save(user);
     return user;
   }
 
-  remove(id: number): void {
-    const index = this.users.findIndex(user => user.id === id);
-    if (index === -1) {
+  async remove(id: number): Promise<boolean | void> {
+    let user = await this.userRepository.findOne({where: {id}});
+    // Save updated user profile to the database
+    if (!user) {
       throw new NotFoundException('User not found');
     }
-    this.users.splice(index, 1);
+    await this.userRepository.delete({id});
+    return true;
   }
 }

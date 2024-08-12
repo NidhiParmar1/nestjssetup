@@ -7,27 +7,27 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() user: Omit<User, 'id'>): User {
-    return this.userService.create(user);
+  async create(@Body() user: Omit<User, 'id'>): Promise<User> {
+    return await this.userService.create(user);
   }
 
   @Get()
-  findAll(): User[] {
-    return this.userService.findAll();
+  async findAll(): Promise<User[]> {
+    return await this.userService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: number): User {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: number): Promise<User> {
+    return await this.userService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: number, @Body() updatedUser: Omit<User, 'id'>): User {
-    return this.userService.update(id, updatedUser);
+  async update(@Param('id') id: number, @Body() updatedUser: Omit<User, 'id'>): Promise<User> {
+    return await this.userService.update(id, updatedUser);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: number): void {
-    return this.userService.remove(id);
+  async remove(@Param('id') id: number): Promise<boolean | void> {
+    return await this.userService.remove(id);
   }
 }
